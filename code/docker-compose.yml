@@ -1,0 +1,39 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+    env_file: .env
+    networks:
+      - network
+
+  consumer:
+    build: ./consumer/
+    env_file: .env
+    ports:
+      - 5555:5555
+    networks:
+      - network
+    volumes:
+       - ./consumer/src:/app/src
+    depends_on:
+      - rabbitmq
+
+  producer:
+    build: ./producer/
+    ports:
+      - 6666:6666
+    env_file: .env
+    networks:
+      - network
+    volumes:
+       - ./producer/src:/app/src
+    depends_on:
+      - rabbitmq
+
+networks:
+  network: {}
