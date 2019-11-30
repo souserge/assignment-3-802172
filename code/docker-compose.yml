@@ -34,6 +34,16 @@ services:
        - ./producer/src:/app/src
     depends_on:
       - rabbitmq
+      
+  customerstreamapp:
+    build: ./customerstreamapp
+    ports:
+      - 4444:4444
+    env_file: .env
+    networks: 
+      network
+    volumes:
+      - ./customersteamapp/src:/app/src  
 
 networks:
   network: {}
