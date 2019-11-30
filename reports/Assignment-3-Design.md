@@ -1,4 +1,4 @@
-# Assignment 3 – Understanding Big Data Processing
+# Assignment 3 - Understanding Big Data Processing
 
 ## Part 1 - Design for streaming analytics (weighted factor for grades = 4)
 
@@ -62,17 +62,40 @@ The **customer** data sources are sensor firing that get recorded when an elderl
 
 ...
 
-> *3. Run customerstreamapp and show the operation of the customerstreamapp with yourtest environments. Explain the test environments. Discuss the analytics and its performance observations. (1 point)*
+> *3. Run customerstreamapp and show the operation of the customerstreamapp with your test environments. Explain the test environments. Discuss the analytics and its performance observations. (1 point)*
 
 ...
 
-> *4. Present your tests and explain them for the situation in which wrong data is sent from or iswithin data sources. Report how your implementation deals with that (e.g., exceptions,failures, and decreasing performance). You should test with different error rates. (1 point)*
+> *4. Present your tests and explain them for the situation in which wrong data is sent from or is within data sources. Report how your implementation deals with that (e.g., exceptions, failures, and decreasing performance). You should test with different error rates. (1 point)*
 
 ...
 
-> *5. Explain parallelism settings in your implementation and test with different (higher) degrees ofparallelism. Report the performance and issues you have observed in your testingenvironments. (1 point).*
+> *5. Explain parallelism settings in your implementation and test with different (higher) degrees of parallelism. Report the performance and issues you have observed in your testing environments. (1 point)*
+
+...
 
 
+## Part 3 - Connection (weighted factor for grades = 2)
+
+> *1. If you would like the analytics results to be stored also into mysimbdp-coredms as the final sink, how would you modify the design and implement this (better to use a figure to explain your design). (1 point)*
+
+...
+   
+> *2. Given the output of streaming analytics stored in mysimbdp-coredms for a long time. Explain a batch analytics (see also Part 1, question 1) that could be used to analyze such historical data. How would you implement it? (1 point)*
+   
+...
+
+> *3. Assume that the streaming analytics detects a critical condition (e.g., a very high rate of alerts) that should trigger the execution of a batch analytics to analyze historical data. How would you extend your architecture in Part 1 to support this (use a figure to explain your work)? (1 point)*
+   
+...
+
+> *4. If you want to scale your streaming analytics service for many customers and data, which components would you focus and which techniques you want to use? (1 point)*
+
+...
+
+> *5. Is it possible to achieve end-to-end exactly once delivery in your current implementation? If yes, explain why. If not, what could be conditions and changes to make it happen? If it is impossible to have end-to-end exactly once delivery in your view, explain why. (1 point)*
+
+...
 
 
 <!-- 
