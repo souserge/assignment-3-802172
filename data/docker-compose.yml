@@ -5,6 +5,7 @@ services:
     build: ./
     environment:
       JUPYTER_ENABLE_LAB: "yes"
+      GEN_CERT: "yes"
     ports:
       - 7777:8888
     volumes:
