@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbitmq
+    ports:
+      - 15672:15672
+      - 5672:5672
+    env_file: .env
+
+  sensorapp:
+    build: ./code/sensorapp
+    ports:
+      - 6666:6666
+    env_file: .env
+    volumes:
+       - ./code/sensorapp/src:/app/src
+       - ./data:/app/data
+    depends_on:
+      - rabbitmq
+      
+  customerstreamapp:
+    build: ./code/customerstreamapp
+    ports:
+      - 4444:4444
+    env_file: .env
+    volumes:
+      - ./code/customerstreamapp/src:/usr/src/app/src
+      - ./logs:/usr/src/app/logs
+    depends_on:
+      - rabbitmq
+
+  # clientapp:
+  #   build: ./code/clientapp
+  #   env_file: .env
+  #   ports:
+  #     - 5555:5555
+  #   networks:
+  #     - network
+  #   volumes:
+  #      - ./code/clientapp/src:/app/src
+  #   depends_on:
+  #     - rabbitmq
+
+networks:
+  network: {}

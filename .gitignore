@@ -1,2 +1,8 @@
+.DS_Store
 .vscode/
 .env
+.settings/
+
+code/customerstreamapp/target
+.classpath
+.project
