@@ -17,6 +17,7 @@
  */
 package mysimbdp;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.values.PCollection;
@@ -59,7 +60,7 @@ public class CustomerStreamPipeline {
       }
     };
 
-    CustomerStreamPipeline.waitForRabbitMQ(10);
+    CustomerStreamPipeline.waitForRabbitMQ(2);
 
     Pipeline p = Pipeline.create(PipelineOptionsFactory.fromArgs(args).withValidation().create());
 
@@ -74,17 +75,17 @@ public class CustomerStreamPipeline {
   }
 
   private static String getConnectionUri() {
-    String user = System.getenv("RABBITMQ_DEFAULT_USER");
-    String pass = System.getenv("RABBITMQ_DEFAULT_PASS");
-    String host = System.getenv("RABBITMQ_HOST");
-    String port = "5672";
+    String user = Optional.ofNullable(System.getenv("RABBITMQ_DEFAULT_USER")).orElse("admin");
+    String pass = Optional.ofNullable(System.getenv("RABBITMQ_DEFAULT_PASS")).orElse("admin");
+    String host = Optional.ofNullable(System.getenv("RABBITMQ_HOST")).orElse("localhost");
+    String port = Optional.ofNullable(System.getenv("RABBITMQ_PORT")).orElse("5672");
     String[] params = { "retry_delay=5", "connection_attempts=5" };
 
     return "amqp://" + user + ":" + pass + "@" + host + ":" + port + '?' + String.join("&", params);
   }
 
   private static String getQueueName() {
-    return "customerstreamapp";
+    return Optional.ofNullable(System.getenv("RABBITMQ_STREAMAPP_QUEUE_NAME")).orElse("customerstreamapp");
   }
 
   private static void waitForRabbitMQ(int seconds) {

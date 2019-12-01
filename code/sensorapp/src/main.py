@@ -5,13 +5,13 @@ import csv
 # 3rd party imports
 import pika
 
-RABBITMQ_HOST = os.environ['RABBITMQ_HOST']
-RABBITMQ_USERNAME = os.environ['RABBITMQ_DEFAULT_USER']
-RABBITMQ_PASSWORD = os.environ['RABBITMQ_DEFAULT_PASS']
-
-QUEUE_NAME = 'customerstreamapp'
-DATA_PATH = '/app/data/data.csv'
-EXCHANGE_DEFAULT = ''
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_USERNAME = os.getenv('RABBITMQ_DEFAULT_USER', 'admin')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_DEFAULT_PASS', 'admin')
+RABBITMQ_PORT = os.getenv('RABBITMQ_PORT', 5672)
+QUEUE_NAME = os.getenv('RABBITMQ_STREAMAPP_QUEUE_NAME', 'customerstreamapp')
+DATA_PATH = os.getenv('DATA_PATH', '../../data/dataset/data.csv')
+EXCHANGE_DEFAULT = ''  # must be blank
 
 
 def main():
@@ -35,6 +35,7 @@ def use_rabbit_channel(callback):
 
     connection_parameters = pika.ConnectionParameters(
         host=RABBITMQ_HOST,
+        port=RABBITMQ_PORT,
         credentials=credentials,
         connection_attempts=5,
         retry_delay=5)
@@ -51,8 +52,10 @@ def process_data_stream(processor):
     with open(DATA_PATH) as csvfile:
         data_stream = csv.reader(csvfile, strict=True)
         header = next(data_stream, None)
-        for row in data_stream:
+        for idx, row in enumerate(data_stream):
             processor(row)
+            if idx > 10:
+                break
 
 
 if __name__ == '__main__':

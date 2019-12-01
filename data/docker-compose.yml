@@ -4,9 +4,10 @@ services:
   jupyterlab:
     image: jupyter/tensorflow-notebook:latest
     environment:
-      ENV JUPYTER_ENABLE_LAB=yes
-      ENV GEN_CERT:yes
+      JUPYTER_ENABLE_LAB: "yes"
+      GEN_CERT: "yes"
     ports:
-      - 7777:7777
+      - 7777:8888
     volumes:
-      - ./:/home/jovyan/data
+      - ./dataset:/home/jovyan/data
+      - ./notebooks:/home/jovyan/work

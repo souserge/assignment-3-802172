@@ -16,7 +16,7 @@ services:
     env_file: .env
     volumes:
        - ./code/sensorapp/src:/app/src
-       - ./data:/app/data
+       - ./data/dataset:/app/data
     depends_on:
       - rabbitmq
       
