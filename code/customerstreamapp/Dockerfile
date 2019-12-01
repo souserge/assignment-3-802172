@@ -1,18 +1,16 @@
-FROM python:3.7-alpine
+FROM maven:latest
 LABEL Name=customersteamapp Version=0.0.1
 
-WORKDIR /app
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-COPY Pipfile ./
-COPY Pipfile.lock ./
+COPY pom.xml /usr/src/app
+RUN mvn install
 
-RUN python3 -m pip install pipenv
-RUN pipenv install --deploy --ignore-pipfile
+COPY src /usr/src/app/src
+RUN mvn compile
+RUN mvn package
 
-COPY . .
-
-EXPOSE 80
-EXPOSE 443
-EXPOSE 4444
-
-CMD ["pipenv", "run", "python", "-u", "src/main.py"]
+CMD mvn exec:java \
+    -Dexec.mainClass=mysimbdp.StarterPipeline
+#     -Dexec.args="--output=./output/"
