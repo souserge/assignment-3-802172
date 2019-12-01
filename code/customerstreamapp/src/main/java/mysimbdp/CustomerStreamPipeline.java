@@ -17,7 +17,11 @@
  */
 package mysimbdp;
 
+import java.util.concurrent.TimeUnit;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.io.rabbitmq.RabbitMqIO;
+import org.apache.beam.sdk.io.rabbitmq.RabbitMqMessage;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
@@ -28,33 +32,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A starter example for writing Beam programs.
  *
- * <p>The example takes two strings, converts them to their upper-case
- * representation and logs them.
- *
- * <p>To run this starter example locally using DirectRunner, just
- * execute it without any additional parameters from your favorite development
- * environment.
- *
- * <p>To run this starter example using managed resource in Google Cloud
+ * <p>To run the pipeline using managed resource in Google Cloud
  * Platform, you should specify the following command-line options:
  *   --project=<YOUR_PROJECT_ID>
  *   --stagingLocation=<STAGING_LOCATION_IN_CLOUD_STORAGE>
  *   --runner=DataflowRunner
  */
-public class StarterPipeline {
-  private static final Logger LOG = LoggerFactory.getLogger(StarterPipeline.class);
+public class CustomerStreamPipeline {
+  private static final Logger LOG = LoggerFactory.getLogger(CustomerStreamPipeline.class);
 
   public static void main(String[] args) {
+    this.waitForRabbitMQ(10);
+
     Pipeline p = Pipeline.create(
         PipelineOptionsFactory.fromArgs(args).withValidation().create());
 
-    p.apply(Create.of("Hello", "World"))
-    .apply(MapElements.via(new SimpleFunction<String, String>() {
+    String uri = this.getConnectionUri();
+    String queue = this.getQueueName();
+
+    PCollection<RabbitMqMessage> messages = p.apply(
+        RabbitMqIO.read().withUri(uri).withQueue(queue));
+    
+    messages
+    .apply(MapElements.via(new SimpleFunction<RabbitMqMessage, String>() {
       @Override
-      public String apply(String input) {
-        return input.toUpperCase();
+      public String apply(RabbitMqMessage input) {
+        return new String(input.getBody());
       }
     }))
     .apply(ParDo.of(new DoFn<String, Void>() {
@@ -65,5 +69,30 @@ public class StarterPipeline {
     }));
 
     p.run();
+  }
+
+  private String getConnectionUri() {
+    String user = System.getenv("RABBITMQ_DEFAULT_USER");
+    String pass = System.getenv("RABBITMQ_DEFAULT_PASS");
+    String host = System.getenv("RABBITMQ_HOST");
+    String port = "5672";
+    String[] params = {
+      "retry_delay=5",
+      "connection_attempts=5"
+    };
+
+    return "amqp://" + user + ":" + pass + "@" + host + '?' + String.join("&", params);
+  }
+
+  private String getQueueName() {
+    return "customerstreamapp";
+  }
+
+  private void waitForRabbitMQ(int seconds) {
+    try {
+      TimeUnit.SECONDS.sleep(seconds);
+    } catch (InterruptedException e) {
+      System.out.println("Something went wrong.");
+    }
   }
 }

@@ -12,5 +12,5 @@ RUN mvn compile
 RUN mvn package
 
 CMD mvn exec:java \
-    -Dexec.mainClass=mysimbdp.StarterPipeline
+    -Dexec.mainClass=mysimbdp.CustomerStreamPipeline
 #     -Dexec.args="--output=./output/"
