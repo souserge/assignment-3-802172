@@ -11,27 +11,27 @@ services:
     networks:
       - network
 
-  consumer:
-    build: ./consumer/
+  clientapp:
+    build: ./clientapp/
     env_file: .env
     ports:
       - 5555:5555
     networks:
       - network
     volumes:
-       - ./consumer/src:/app/src
+       - ./clientapp/src:/app/src
     depends_on:
       - rabbitmq
 
-  producer:
-    build: ./producer/
+  sensorapp:
+    build: ./sensorapp/
     ports:
       - 6666:6666
     env_file: .env
     networks:
       - network
     volumes:
-       - ./producer/src:/app/src
+       - ./sensorapp/src:/app/src
     depends_on:
       - rabbitmq
       

@@ -1,5 +1,5 @@
 FROM python:3.7-alpine
-LABEL Name=assignment-3-802172_producer Version=0.0.1
+LABEL Name=sensorapp Version=0.0.1
 
 WORKDIR /app
 

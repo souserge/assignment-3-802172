@@ -1,5 +1,5 @@
 FROM python:3.7-alpine
-LABEL Name=assignment-3-802172_consumer Version=0.0.1
+LABEL Name=clientapp Version=0.0.1
 
 WORKDIR /app
 
