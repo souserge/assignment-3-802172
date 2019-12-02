@@ -118,6 +118,38 @@ public class CustomerStreamPipeline {
       }
     };
 
+    DoFn<KV<String, Long>, RabbitMqMessage> toRabbitMQ = new DoFn<KV<String, Long>, RabbitMqMessage>() {
+      @ProcessElement
+      public void processElement(ProcessContext c) {
+        String ts = c.timestamp().toString();
+        String routingKey = c.element().getKey();
+        Long value = c.element().getValue();
+        byte[] body = (ts + "," + value.toString()).getBytes();
+
+        // public RabbitMqMessage(
+        // String routingKey,
+        // byte[] body,
+        // String contentType,
+        // String contentEncoding,
+        // Map<String, Object> headers,
+        // Integer deliveryMode,
+        // Integer priority,
+        // String correlationId,
+        // String replyTo,
+        // String expiration,
+        // String messageId,
+        // Date timestamp,
+        // String type,
+        // String userId,
+        // String appId,
+        // String clusterId)
+        RabbitMqMessage msg = new RabbitMqMessage(routingKey, body, null, null, new HashMap<>(), 1, 1, null, null, null,
+            null, new Date(), null, null, null, null);
+
+        c.output(msg);
+      }
+    };
+
     Window<String> fixedDailyWindow = Window.<String>into(FixedWindows.of(Duration.standardDays(1)))
         .withAllowedLateness(Duration.standardDays(1000)).accumulatingFiredPanes()
         .triggering(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(20)));
@@ -141,9 +173,13 @@ public class CustomerStreamPipeline {
     PCollection<String> useridOnly = withTimestampKV.apply(Keys.create());
 
     PCollection<String> windowed = useridOnly.apply(fixedDailyWindow);
-    PCollection<KV<String, Long>> grouped = windowed.apply(Count.perElement());
+    PCollection<KV<String, Long>> counted = windowed.apply(Count.perElement());
 
-    grouped.apply(ParDo.of(logMessages));
+    counted.apply(ParDo.of(logMessages));
+
+    PCollection<RabbitMqMessage> groupedMessages = counted.apply(ParDo.of(toRabbitMQ));
+    groupedMessages.apply(
+        RabbitMqIO.write().withUri(uri).withExchangeDeclare(true).withExchange("movement_notifications", "topic"));
 
     p.run();
   }
