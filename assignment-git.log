@@ -1,2 +1,129 @@
-the content of this file should be the output of the log of your own git project for this assignment
-using git log command to export your git log
+commit 089bc9ceb5f05aab79534e265061106ac5790ec9
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 12:57:01 2019 +0200
+
+    Commit the reports
+
+commit b6b41fc4296bfb56ab8d1a51c8e5466e80945a61
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 12:18:17 2019 +0200
+
+    Fix client app errors
+
+commit 588ef58ac6e723406c54f25213cf6d88598bce0d
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 12:18:06 2019 +0200
+
+    Add performance logs
+
+commit 61fe3e2c9e3a079efef72c14b9c5c413575fc1d8
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 11:49:01 2019 +0200
+
+    Quick fix
+
+commit 579c6d8ce537f70aa860401f31cde76e5e8051e5
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 11:46:16 2019 +0200
+
+    Add clientapp to docker
+
+commit 29c8c433406bacc49b27e02a66f8eb4691d7777a
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 11:44:19 2019 +0200
+
+    Small corrections
+
+commit b61e4c1d7dddbb98a2916566c9c75667f2bcda94
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 10:46:37 2019 +0200
+
+    Finish the pipeline :)
+
+commit 65e02113ba359d875bbfcf2b8b8d38b8f95e7011
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Mon Dec 2 09:07:43 2019 +0200
+
+    Fix the pipeline
+
+commit 00d5aa3c6b3ff0c4cd9a71ad9acfa74e85821b4c
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 21:12:29 2019 +0200
+
+    Change data exploration container
+
+commit 21bb958c4399b7bec75f26431bf223ba62600c9c
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 20:58:00 2019 +0200
+
+    Analyze data
+
+commit 2875481b1ed1544ba05e62ef6c42c1fd3545653b
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 20:46:11 2019 +0200
+
+    Restructure the project and add enviroment vars
+
+commit 9bf957be68f69c284e880304eb664e0ca194f6d2
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 18:17:04 2019 +0200
+
+    Add data producing
+
+commit fbe00b1ec71f08cf1d875a192ff2eaef6632f31b
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 16:19:11 2019 +0200
+
+    Add creation command
+
+commit e9ce02d8b1d22e9f0f0b90bac7024c2035e182e9
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 16:17:40 2019 +0200
+
+    Set up a connection between Rabbit and Beam
+
+commit 4c974043c2a11c67dab524a289bf06bd74a00c24
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 12:44:05 2019 +0200
+
+    Add a simple Apache Beam app
+
+commit 02a62b9adf2745df1efca949eec8ffdcbfbac1ea
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sun Dec 1 09:59:10 2019 +0200
+
+    Rename rabbitmq producer and consumer
+
+commit 0e007b3f894771df1bc2b98af3d313dc24f811f5
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sat Nov 30 23:28:08 2019 +0200
+
+    Add all questions
+
+commit 73fede2be6bacc4101741291b8e86d0f654c3539
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sat Nov 30 23:22:12 2019 +0200
+
+    Add Part 1 of the report
+
+commit 18e995b70f8bb2ab4b086a52bb7cb45e80c052e3
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sat Nov 30 11:26:12 2019 +0200
+
+    Add Apache Beam streaming example app
+
+commit d219cef0b52dc2032e567d52bb431fdcef809c12
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Sat Nov 30 11:25:37 2019 +0200
+
+    Add jupyterlab environment for data exploration
+
+commit a08a49d168a6ea764379ae6ecddfeb804028200b
+Author: sourserge <15277406+souserge@users.noreply.github.com>
+Date:   Wed Nov 27 18:11:27 2019 +0200
+
+    Initial commit
+    
+    * Set up directory structure
+    * Create RabbitMQ producer and consumer
+    * Dockerize rabbitmq server and apps
