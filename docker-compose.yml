@@ -31,17 +31,12 @@ services:
     depends_on:
       - rabbitmq
 
-  # clientapp:
-  #   build: ./code/clientapp
-  #   env_file: .env
-  #   ports:
-  #     - 5555:5555
-  #   networks:
-  #     - network
-  #   volumes:
-  #      - ./code/clientapp/src:/app/src
-  #   depends_on:
-  #     - rabbitmq
-
-networks:
-  network: {}
+  clientapp:
+    build: ./code/clientapp
+    env_file: .env
+    ports:
+      - 5555:5555
+    volumes:
+       - ./code/clientapp/src:/app/src
+    depends_on:
+      - rabbitmq
