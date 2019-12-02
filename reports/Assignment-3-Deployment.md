@@ -1,18 +1,14 @@
 # This your assignment deployment report
 
-it is a free form. you can add:
+The deployment of the app is very straightforward:
 
-* how to deploy your system 
+1. run `docker-compose up -d` in the root directory of the project.
+2. run `docker-compose logs` to check if all services are running correctly.
+3. The RabbitMQ monitoring and management tool should be accessible on `http://localhost:15672`
 
+Additionally, a JupyterLab data exploration environment can be run. To do so:
 
-```
-docker run -it --rm --name my-maven-project -v "$(pwd)":/usr/src/mymaven -w /usr/src/mymaven maven:3.3-jdk-8 \
-mvn archetype:generate \
-      -DarchetypeGroupId=org.apache.beam \
-      -DarchetypeArtifactId=beam-sdks-java-maven-archetypes-starter \
-      -DarchetypeVersion=2.16.0 \
-      -DgroupId=mysimbdp \
-      -DartifactId=customerstreamapp \
-      -Dversion="0.1" \
-      -DinteractiveMode=false
-```
+1. go to `data/` directory (`cd data`)
+2. run `docker-compose up -d`
+3. check `docker-compose logs` is all runs properly, and copy the access token
+4. go to `https://localhost:7777` and connect with the access token

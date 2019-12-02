@@ -25,7 +25,7 @@ Each row describes entering of a specific person (`part_id` field) to a certain 
 
 (i) Keyed data streams are useful in case when we want to logically separate the data stream into several substream grouped by key. When analysing the duration of stay in a room for every person, an appropriate choice for a key would be `part_id`. On the other hand, for the aggregation of statistics per room, we can group the data by the `room` key.
 
-(ii) ...
+(ii) Since I'm using RabbitMQ, it takes care of many delivery guarantees. Since every message must be acknowledged, and the broker redelivers unacknowledged messages, it is virtually impossible to have undelivered messages. 
 
 > *3. Given streaming data from the customer (selected before). Explain the following issues:*
 >   * *(i) which types of time should be associated with stream sources for the analytics and be considered in stream processing (if the data sources have no timestamps associated withevents, then what would be your solution), and*
@@ -41,7 +41,6 @@ Each row describes entering of a specific person (`part_id` field) to a certain 
 
 1. As mentioned before, the lag between the time of an event and the ingestion time of the associated datapoint must be sufficiently small in order to perfom the kind of event-time dependent analytics useful to my customers.
 2. Additionally, the processing time is important – there absolutely must not be any large queuing present in the system, since it would cause delayed notifications to the customers.
-3. ...
 
 > *5. Provide a design of your architecture for the streaming analytics service in which you clarify: **customer** data sources, **mysimbdp** message brokers, **mysimbdp** streaming computing service, **customer** streaming analytics app, **mysimbdp-coredms**, and other components, if needed. Explain your choices of technologies for implementing your design and reusability of existing assignment works. Note that the result from **customerstreamapp** will be sent back to the customer in near real-time. (1 point)*
 
@@ -50,40 +49,49 @@ The architecture of the analytics service is presented on the following diagram:
 
 The **customer** data sources are sensor firing that get recorded when an elderly person enters a certain room. This data then gets sent (via an AMQP publisher) to the **mysimbdp** message broker which powered by RabbitMQ. The brocker then sends the data stream to the **customer** streaming analytics app built with the Apache Beam unified programming model. The actual processing is executed on Google Cloud Dataflow, which acts as the **mysimbdp** streaming computing service. The analytics results are then sent back to customers via RabbitMQ and additionally ingested to **mysimbdp-coredms** for later batch processing.
 
-...
+Apache Beam was selected due to its seamless stream and batch processing guarantees, possibility to execute the pipelines on a no-ops cloud service Google Cloud Dataflow, and ease of switching to other engines like Apache Flink and Spark. RabbitMQ is a production-ready system proven to be resilient because of its low latency, scalability and the Exactly Once delivery guarantee.
 
 ## Part 2 - Implementation of streaming analytics (weightedfactor for grades = 4)
 
 > *1. Explain the implemented structures of the input streaming data and the output result, and the data serialization/deserialization, for the streaming analytics application (customerstreamapp) for customers. (1 point)*
 
-...
+My simulated sensor data publisher application (`code/sensorapp/`) reads the events from a CSV file. Every row is checked and then published to RabbitMQ as a UTF-8 encoded and serialized string. In the streaming analytics pipeline apllication written in Java (`code/customerstreamapp/`), the RabbitMQ message is processed by Apache Beam, after which the data is deserialized into a `HashMap`, and the event timestamp is extracted and recorded for windowing purposes.
 
-> *2. Explain the key logic of functions for processing events/records in customerstreamapp in your implementation. (1 point)*
+The application writes back the analytics results in the comma-separated format of `<iso_timestamp>,<move_count>`, the number of room changes (`<move_count>`) for a given person during that day (`<iso_timestamp>`). Then the customer application (`code/clientapp`) consumes the message, parses it and displays a notification.
 
-...
+Since every result message is routed by the customer ID (`part_id`), there is no need to duplicate it in the body of the RabbitMQ message.
 
-> *3. Run customerstreamapp and show the operation of the customerstreamapp with your test environments. Explain the test environments. Discuss the analytics and its performance observations. (1 point)*
+> *2. Explain the key logic of functions for processing events/records in `customerstreamapp` in your implementation. (1 point)*
 
-...
+The processing is implemented as a pipeline of data. Firstly, the data is parsed as described above (`parseMessages` function); a number of transformations is performed to transform the event into a key-value pair with a timestamp (`addTimestamps` and `toKeyValue` functions), where the key is `part_id` and the value is `room`. Then, a fixed windowing is performed that splits the stream into 1 day time windows (using the `fixedDailyWindow` object). The windowed data grouped by the key (i.e. customer) and aggregated in order to extract the number of movements per day person (`Count.perElement()` function). Finally, results are logged (`logMessages`) and trasformed to RabbitMQ messages for writing (`toRabbitMQ`).
+
+> *3. Run `customerstreamapp` and show the operation of the `customerstreamapp` with your test environments. Explain the test environments. Discuss the analytics and its performance observations. (1 point)*
+
+I was testing my implementation in a local environment. I containerized all the services for easier testing and deployment using `Docker` and `docker-compose`. Additionally, I deployed a Web-based management tool for RabbitMQ to monitor and analyze the broker's performace.
+
+![Operation of customerstreamapp](img/execution.png)
+
+Here is a sample chart showing the message exchange rate between `customerstreamapp` and `clientapp`:
+![RabbitMQ chart](img/rabbitmq.jpg)
+
 
 > *4. Present your tests and explain them for the situation in which wrong data is sent from or is within data sources. Report how your implementation deals with that (e.g., exceptions, failures, and decreasing performance). You should test with different error rates. (1 point)*
 
-...
+Before sending the data to `customerstreamapp`, the data format is checked on the `sensorapp` side (`strict=True` option of `csv.reader` checks for malformed rows in CSV). In case incorrect data is still somehow received, my `customerstreamapp` will report and error if the format does not comply.
 
 > *5. Explain parallelism settings in your implementation and test with different (higher) degrees of parallelism. Report the performance and issues you have observed in your testing environments. (1 point)*
 
-...
-
+The paralellism in my system is achieved by clearly specifying the steps in the pipeline that can be done in parallel. That is, all mapping operations (`MapElements` and `ParDo` step in the pipeline) are capable of being paralellized. On my local machine, no substantial performance boost can be achieved, since the processing power of it is quite low. However, the pipepline can be easily deployed to Google Cloud Dataflow, where much higher degrees of parallelism can be achieved with absolutely no changes to the pipeline code.
 
 ## Part 3 - Connection (weighted factor for grades = 2)
 
-> *1. If you would like the analytics results to be stored also into mysimbdp-coredms as the final sink, how would you modify the design and implement this (better to use a figure to explain your design). (1 point)*
+> *1. If you would like the analytics results to be stored also into `mysimbdp-coredms` as the final sink, how would you modify the design and implement this (better to use a figure to explain your design). (1 point)*
 
-...
-   
+Although not implemented, the design of the system with `mysimbdp-coredms` is shown on the figure in Part 1. Apache Beam allows multiple sinks to be defined, and the library provides an IO connector to a MongoDB cluster, which can be specified along the already implemented RabbitMQ publisher.
+
 > *2. Given the output of streaming analytics stored in mysimbdp-coredms for a long time. Explain a batch analytics (see also Part 1, question 1) that could be used to analyze such historical data. How would you implement it? (1 point)*
    
-...
+Both batch and stream processing are supported by Apache Beam, thus, the same pipeline can be run for the analysis of historical data. High modularity allows for reuse of the components.
 
 > *3. Assume that the streaming analytics detects a critical condition (e.g., a very high rate of alerts) that should trigger the execution of a batch analytics to analyze historical data. How would you extend your architecture in Part 1 to support this (use a figure to explain your work)? (1 point)*
    
