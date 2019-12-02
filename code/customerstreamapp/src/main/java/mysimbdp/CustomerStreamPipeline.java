@@ -155,7 +155,7 @@ public class CustomerStreamPipeline {
         .triggering(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(20)));
     // Begining of the pipeline ---------------
 
-    CustomerStreamPipeline.waitForRabbitMQ(2);
+    CustomerStreamPipeline.waitForRabbitMQ(15);
 
     Pipeline p = Pipeline.create(PipelineOptionsFactory.fromArgs(args).withValidation().create());
 
