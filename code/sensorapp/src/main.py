@@ -54,7 +54,7 @@ def process_data_stream(processor):
         header = next(data_stream, None)
         for idx, row in enumerate(data_stream):
             processor(row)
-            if idx > 10:
+            if idx > 1000:
                 break
 
 

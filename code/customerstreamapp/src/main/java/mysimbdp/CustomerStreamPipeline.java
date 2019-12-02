@@ -18,18 +18,35 @@
 package mysimbdp;
 
 import java.util.Optional;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.io.rabbitmq.RabbitMqIO;
 import org.apache.beam.sdk.io.rabbitmq.RabbitMqMessage;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.transforms.Count;
 import org.apache.beam.sdk.transforms.DoFn;
+import org.apache.beam.sdk.transforms.Keys;
 import org.apache.beam.sdk.transforms.MapElements;
 import org.apache.beam.sdk.transforms.ParDo;
+import org.apache.beam.sdk.transforms.SerializableFunction;
 import org.apache.beam.sdk.transforms.SimpleFunction;
+import org.apache.beam.sdk.transforms.WithTimestamps;
+import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.transforms.windowing.AfterProcessingTime;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -43,22 +60,68 @@ public class CustomerStreamPipeline {
   private static final Logger LOG = LoggerFactory.getLogger(CustomerStreamPipeline.class);
 
   public static void main(String[] args) {
-    DoFn<String[], Void> logMessages = new DoFn<String[], Void>() {
+
+    DoFn<KV<String, Long>, Void> logMessages = new DoFn<KV<String, Long>, Void>() {
+
       @ProcessElement
       public void processElement(ProcessContext c) {
-        String msg = String.join(",", c.element());
+        Date d = c.timestamp().toDate();
+        int day = d.getDate();
+        int month = d.getMonth();
+        int year = d.getYear() - 100;
+        KV<String, Long> el = c.element();
+        Long count = el.getValue();
+        String userid = el.getKey();
+        String msg = "On " + day + "/" + month + "/" + year + ", person " + userid + "moved " + count + " times";
         LOG.info(msg);
       }
     };
 
-    SimpleFunction<RabbitMqMessage, String[]> parseMessages = new SimpleFunction<RabbitMqMessage, String[]>() {
+    SerializableFunction<Map<String, String>, Instant> addTimestamps = new SerializableFunction<Map<String, String>, Instant>() {
       @Override
-      public String[] apply(RabbitMqMessage input) {
-        String body = new String(input.getBody());
-        String[] row = body.split("\n");
-        return row;
+      public Instant apply(Map<String, String> element) {
+        DateTimeFormatter timestampFormatter = new DateTimeFormatterBuilder().appendYear(4, 4).appendMonthOfYear(2)
+            .appendDayOfMonth(2).appendHourOfDay(2).appendLiteral(':').appendMinuteOfHour(2).appendLiteral(':')
+            .appendSecondOfMinute(2).toFormatter();
+        return Instant.parse(element.get("timestamp"), timestampFormatter);
       }
     };
+
+    SimpleFunction<RabbitMqMessage, Map<String, String>> parseMessages = new SimpleFunction<RabbitMqMessage, Map<String, String>>() {
+      @Override
+      public Map<String, String> apply(RabbitMqMessage input) {
+        String body = new String(input.getBody());
+
+        // part_id, ts_date, ts_time, room
+        String[] row = body.split("\n");
+
+        if (row.length != 4) {
+          // TODO: throw exception
+        }
+
+        Map<String, String> rowMap = new HashMap<String, String>();
+        String userid = row[0];
+        String timestamp = row[1] + row[2];
+        String room = row[3];
+        rowMap.put("userid", userid);
+        rowMap.put("timestamp", timestamp);
+        rowMap.put("room", room);
+
+        return rowMap;
+      }
+    };
+
+    SimpleFunction<Map<String, String>, KV<String, String>> toKeyValue = new SimpleFunction<Map<String, String>, KV<String, String>>() {
+      @Override
+      public KV<String, String> apply(Map<String, String> element) {
+        return KV.of(element.get("userid"), element.get("room"));
+      }
+    };
+
+    Window<String> fixedDailyWindow = Window.<String>into(FixedWindows.of(Duration.standardDays(1)))
+        .withAllowedLateness(Duration.standardDays(1000)).accumulatingFiredPanes()
+        .triggering(AfterProcessingTime.pastFirstElementInPane().plusDelayOf(Duration.standardSeconds(20)));
+    // Begining of the pipeline ---------------
 
     CustomerStreamPipeline.waitForRabbitMQ(2);
 
@@ -68,8 +131,19 @@ public class CustomerStreamPipeline {
     String queue = CustomerStreamPipeline.getQueueName();
 
     PCollection<RabbitMqMessage> messages = p.apply(RabbitMqIO.read().withUri(uri).withQueue(queue));
+    PCollection<Map<String, String>> parsed = messages.apply(MapElements.via(parseMessages));
 
-    messages.apply(MapElements.via(parseMessages)).apply(ParDo.of(logMessages));
+    PCollection<Map<String, String>> withTimestamp = parsed
+        .apply(WithTimestamps.of(addTimestamps).withAllowedTimestampSkew(Duration.standardDays(1000)));
+
+    PCollection<KV<String, String>> withTimestampKV = withTimestamp.apply(MapElements.via(toKeyValue));
+
+    PCollection<String> useridOnly = withTimestampKV.apply(Keys.create());
+
+    PCollection<String> windowed = useridOnly.apply(fixedDailyWindow);
+    PCollection<KV<String, Long>> grouped = windowed.apply(Count.perElement());
+
+    grouped.apply(ParDo.of(logMessages));
 
     p.run();
   }
