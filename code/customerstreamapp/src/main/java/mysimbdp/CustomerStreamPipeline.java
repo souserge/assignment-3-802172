@@ -72,7 +72,7 @@ public class CustomerStreamPipeline {
         KV<String, Long> el = c.element();
         Long count = el.getValue();
         String userid = el.getKey();
-        String msg = "On " + day + "/" + month + "/" + year + ", person " + userid + "moved " + count + " times";
+        String msg = "On " + day + "/" + month + "/" + year + ", person " + userid + " moved " + count + " times";
         LOG.info(msg);
       }
     };
@@ -96,7 +96,7 @@ public class CustomerStreamPipeline {
         String[] row = body.split("\n");
 
         if (row.length != 4) {
-          // TODO: throw exception
+          LOG.error("Incorrect row:\n" + body);
         }
 
         Map<String, String> rowMap = new HashMap<String, String>();
