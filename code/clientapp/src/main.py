@@ -1,6 +1,5 @@
 # Builtin imports
 import os
-from datetime import date
 
 # 3rd party imports
 import pika
@@ -33,10 +32,11 @@ def notify(channel, binding_key, callback):
 def main():
     def consume_notifications(connection):
         def callback(ch, method, properties, body):
+            body = body.decode('utf-8')
             [ts, moves] = body.split(',')
-            da = date.fromisoformat(ts)
+            da = ts.split('T')[0]
             print('Person {} moved {} times bewteen the rooms on the day of {}'.format(
-                method.routing_key, moves, da.isoformat()))
+                method.routing_key, moves, da))
 
         notify(connection.channel(), '#', callback)
 
